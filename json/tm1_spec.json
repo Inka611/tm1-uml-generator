@@ -1,0 +1,232 @@
+{
+  "_template_rules": {
+    "rules": [
+      "Each cube MUST have one Measures type dimension",
+      "Shared dimensions defined ONCE in shared_dimensions section",
+      "Properties cube shares Item dimension with Main cube",
+      "Edge weight: +1 addition, -1 subtraction",
+      "Linked measures must reference source cube and dimension"
+    ],
+    "available_element_types": [
+      "Consolidated",
+      "Leaf",
+      "Numeric",
+      "String"
+    ],
+    "available_dimension_types": [
+      "Regular",
+      "Measures"
+    ]
+  },
+
+  "model": {
+    "name": "<Model Name>",
+    "description": "<Model Description>",
+    "version": "1.0"
+  },
+
+  "shared_dimensions": [
+    {
+      "name": "<Dimension Name>",
+      "type": "Regular",
+      "description": "<Dimension Description>",
+      "hierarchies": [
+        {
+          "name": "<Hierarchy Name>",
+          "elements": [
+            {"name": "<Total Element>", "type": "Consolidated"},
+            {"name": "<Leaf Element 1>", "type": "Leaf"},
+            {"name": "<Leaf Element 2>", "type": "Leaf"}
+          ],
+          "edges": [
+            {"parent": "<Total Element>", "child": "<Leaf Element 1>", "weight": 1},
+            {"parent": "<Total Element>", "child": "<Leaf Element 2>", "weight": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Version",
+      "type": "Regular",
+      "description": "List of versions",
+      "hierarchies": [
+        {
+          "name": "Version",
+          "elements": [
+            {"name": "Actual", "type": "Leaf"},
+            {"name": "Budget", "type": "Leaf"},
+            {"name": "Forecast", "type": "Leaf"}
+          ],
+          "edges": []
+        }
+      ]
+    },
+    {
+      "name": "<Time Dimension Name>",
+      "type": "Regular",
+      "description": "Time dimension by <month | day | week>",
+      "format": "<YYYY-MM | YYYY-MM-DD | YYYY-WW>",
+      "hierarchies": [
+        {
+          "name": "<Time Dimension Name>",
+          "elements": [
+            {"name": "<Year>", "type": "Consolidated"},
+            {"name": "<Year-Period 1>", "type": "Leaf"},
+            {"name": "<Year-Period 2>", "type": "Leaf"},
+            {"name": "<Year-Period 3>", "type": "Leaf"}
+          ],
+          "edges": [
+            {"parent": "<Year>", "child": "<Year-Period 1>", "weight": 1},
+            {"parent": "<Year>", "child": "<Year-Period 2>", "weight": 1},
+            {"parent": "<Year>", "child": "<Year-Period 3>", "weight": 1}
+          ]
+        }
+      ]
+    }
+  ],
+
+  "cubes": [
+    {
+      "name": "<Main Cube Name>",
+      "description": "<Main Cube Description>",
+      "specific_dimensions": [
+        {
+          "name": "<Category Dimension Name>",
+          "type": "Regular",
+          "description": "<Category Dimension Description>",
+          "hierarchies": [
+            {
+              "name": "<Category Dimension Name>",
+              "elements": [
+                {"name": "Total_Category", "type": "Consolidated"},
+                {"name": "<Category 1>", "type": "Leaf"},
+                {"name": "<Category 2>", "type": "Leaf"}
+              ],
+              "edges": [
+                {"parent": "Total_Category", "child": "<Category 1>", "weight": 1},
+                {"parent": "Total_Category", "child": "<Category 2>", "weight": 1}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "<Item Dimension Name>",
+          "type": "Regular",
+          "description": "<Item Dimension Description>",
+          "hierarchies": [
+            {
+              "name": "<Item Dimension Name>",
+              "elements": [
+                {"name": "Total_Items", "type": "Consolidated"},
+                {"name": "<Item 1>", "type": "Leaf"},
+                {"name": "<Item 2>", "type": "Leaf"}
+              ],
+              "edges": [
+                {"parent": "Total_Items", "child": "<Item 1>", "weight": 1},
+                {"parent": "Total_Items", "child": "<Item 2>", "weight": 1}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "<Measures Dimension Name>",
+          "type": "Measures",
+          "description": "<Measures Description>",
+          "hierarchies": [
+            {
+              "name": "<Measures Dimension Name>",
+              "elements": [
+                {"name": "<Numeric Measure 1>", "type": "Numeric"},
+                {"name": "<Numeric Measure 2>", "type": "Numeric"},
+                {"name": "<Consolidated Measure>", "type": "Consolidated"}
+              ],
+              "edges": [
+                {
+                  "parent": "<Consolidated Measure>",
+                  "child": "<Numeric Measure 1>",
+                  "weight": 1
+                },
+                {
+                  "parent": "<Consolidated Measure>",
+                  "child": "<Numeric Measure 2>",
+                  "weight": -1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "shared_dimensions": [
+        "<Shared Dimension 1>",
+        "<Shared Dimension 2>",
+        "<Shared Dimension 3>"
+      ],
+      "related_cubes": [
+        {"name": "<Properties Cube Name>", "relationship": "has properties"}
+      ]
+    },
+
+    {
+      "name": "<Properties Cube Name>",
+      "description": "<Properties Cube Description>",
+      "specific_dimensions": [
+        {
+          "name": "<Item Dimension Name>",
+          "type": "Regular",
+          "description": "Shared with <Main Cube Name> cube",
+          "hierarchies": []
+        },
+        {
+          "name": "<Properties Measures Dimension Name>",
+          "type": "Measures",
+          "description": "<Properties Measures Description>",
+          "hierarchies": [
+            {
+              "name": "<Properties Measures Dimension Name>",
+              "elements": [
+                {"name": "<String Attribute 1>", "type": "String"},
+                {"name": "<Numeric Measure 1>", "type": "Numeric"},
+                {
+                  "name": "<Linked Measure>",
+                  "type": "Numeric",
+                  "source": {
+                    "cube": "<Source Cube Name>",
+                    "dimension": "<Source Dimension Name>",
+                    "element": "<Source Element Name>"
+                  }
+                },
+                {
+                  "name": "<Start Date Attribute>",
+                  "type": "String",
+                  "references": "<Time Dimension Name>"
+                },
+                {
+                  "name": "<End Date Attribute>",
+                  "type": "String",
+                  "references": "<Time Dimension Name>"
+                },
+                {"name": "<Consolidated Measure>", "type": "Consolidated"}
+              ],
+              "edges": [
+                {
+                  "parent": "<Consolidated Measure>",
+                  "child": "<Numeric Measure 1>",
+                  "weight": 1
+                },
+                {
+                  "parent": "<Consolidated Measure>",
+                  "child": "<Linked Measure>",
+                  "weight": -1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "shared_dimensions": [
+        "Version",
+        "<Optional Shared Dimension>"
+      ]
+    }
+  ]
+}
