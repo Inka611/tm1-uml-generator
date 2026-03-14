@@ -1,0 +1,163 @@
+@startuml
+
+skinparam classBackgroundColor LightBlue
+skinparam classBorderColor DarkBlue
+skinparam noteBackgroundColor LightYellow
+
+package "Shared Dimensions" #LightYellow {
+    class Department <<Dimension>> {
+        +type: Regular
+    }
+    class Version <<Dimension>> {
+        +type: Regular
+    }
+    class Time_by_Month <<Dimension>> {
+        +type: Regular
+        +format: YYYY-MM
+    }
+}
+
+package "CAPEX Model" #LightGreen {
+    class CAPEX <<Cube>> {
+        +Description: List of capital expenditures
+    }
+    class Category_Capex <<Dimension>> {
+        +type: Regular
+    }
+    class Item_Capex <<Dimension>> {
+        +type: Regular
+    }
+    class Capex_m <<Dimension>> {
+        +type: Measures
+        --Leaf Elements--
+        +Amount: Numeric
+        +Accumulated_Depreciation: Numeric
+        --Consolidated Elements--
+        +Net_Book_Value: Consolidated
+    }
+    class CAPEX_prop <<Cube>> {
+        +Description: Properties of capital expenditures
+    }
+    class Capex_prop_m <<Dimension>> {
+        +type: Measures
+        --Leaf Elements--
+        +Year: String
+        +Total_Amount: Numeric
+        +Accumulated_Depreciation: Numeric
+        +Purchase_Date: String
+        --Consolidated Elements--
+        +Net_Book_Value: Consolidated
+    }
+}
+
+package "Intangible Assets Model" #LightPink {
+    class Intangible_Assets <<Cube>> {
+        +Description: List of intangible assets
+    }
+    class Category_IA <<Dimension>> {
+        +type: Regular
+    }
+    class Item_IA <<Dimension>> {
+        +type: Regular
+    }
+    class Intangible_Assets_m <<Dimension>> {
+        +type: Measures
+        --Leaf Elements--
+        +Amount: Numeric
+        +Accumulated_Amortization: Numeric
+        --Consolidated Elements--
+        +Net_Book_Value: Consolidated
+    }
+    class IA_prop <<Cube>> {
+        +Description: Properties of intangible assets
+    }
+    class IA_prop_m <<Dimension>> {
+        +type: Measures
+        --Leaf Elements--
+        +Year: String
+        +Total_Amount: Numeric
+        +Accumulated_Amortization: Numeric
+        +Purchase_Date: String
+        +Final_Date: String
+        --Consolidated Elements--
+        +Net_Book_Value: Consolidated
+    }
+}
+
+' CAPEX Relationships
+CAPEX *-- CAPEX_prop : has properties
+CAPEX *-- Capex_m : has measures
+CAPEX *-- Item_Capex : has dimension
+CAPEX *-- Category_Capex : has dimension
+CAPEX o-- Department : uses
+CAPEX o-- Version : uses
+CAPEX o-- Time_by_Month : uses
+
+' CAPEX_prop Relationships
+CAPEX_prop *-- Capex_prop_m : has measures
+CAPEX_prop *-- Item_Capex : has dimension
+CAPEX_prop o-- Version : uses
+
+' Intangible Assets Relationships
+Intangible_Assets *-- IA_prop : has properties
+Intangible_Assets *-- Intangible_Assets_m : has measures
+Intangible_Assets *-- Item_IA : has dimension
+Intangible_Assets *-- Category_IA : has dimension
+Intangible_Assets o-- Department : uses
+Intangible_Assets o-- Version : uses
+Intangible_Assets o-- Time_by_Month : uses
+
+' IA_prop Relationships
+IA_prop *-- IA_prop_m : has measures
+IA_prop *-- Item_IA : has dimension
+IA_prop o-- Version : uses
+
+' Reference Relationships
+Capex_prop_m ..> Time_by_Month : Purchase_Date references
+IA_prop_m ..> Time_by_Month : Purchase_Date references
+IA_prop_m ..> Time_by_Month : Final_Date references
+
+' Consolidation References
+Capex_prop_m ..> Capex_m : Accumulated_Depreciation references
+IA_prop_m ..> Intangible_Assets_m : Accumulated_Amortization references
+
+' Consolidation Notes
+note right of Capex_m
+    <b>Net_Book_Value consolidation:</b>
+    ....
+    + Amount                    (weight: +1)
+    - Accumulated_Depreciation  (weight: -1)
+end note
+
+note right of Capex_prop_m
+    <b>Net_Book_Value consolidation:</b>
+    ....
+    + Total_Amount              (weight: +1)
+    - Accumulated_Depreciation  (weight: -1)
+    ....
+    <b>Accumulated_Depreciation source:</b>
+    Cube: CAPEX
+    Dimension: Capex_m
+    Element: Accumulated_Depreciation
+end note
+
+note right of Intangible_Assets_m
+    <b>Net_Book_Value consolidation:</b>
+    ....
+    + Amount                    (weight: +1)
+    - Accumulated_Amortization  (weight: -1)
+end note
+
+note right of IA_prop_m
+    <b>Net_Book_Value consolidation:</b>
+    ....
+    + Total_Amount              (weight: +1)
+    - Accumulated_Amortization  (weight: -1)
+    ....
+    <b>Accumulated_Amortization source:</b>
+    Cube: Intangible_Assets
+    Dimension: Intangible_Assets_m
+    Element: Accumulated_Amortization
+end note
+
+@enduml
