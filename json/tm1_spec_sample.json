@@ -1,0 +1,340 @@
+{
+  "model": {
+    "name": "Fixed Assets Model",
+    "description": "CAPEX and Intangible Assets TM1 Model",
+    "version": "1.0"
+  },
+
+  "shared_dimensions": [
+    {
+      "name": "Department",
+      "type": "Regular",
+      "description": "List of departments",
+      "hierarchies": [
+        {
+          "name": "Department",
+          "elements": [
+            {"name": "Total_Department", "type": "Consolidated"},
+            {"name": "Finance", "type": "Leaf"},
+            {"name": "IT", "type": "Leaf"},
+            {"name": "Operations", "type": "Leaf"}
+          ],
+          "edges": [
+            {"parent": "Total_Department", "child": "Finance", "weight": 1},
+            {"parent": "Total_Department", "child": "IT", "weight": 1},
+            {"parent": "Total_Department", "child": "Operations", "weight": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Version",
+      "type": "Regular",
+      "description": "List of versions",
+      "hierarchies": [
+        {
+          "name": "Version",
+          "elements": [
+            {"name": "Actual", "type": "Leaf"},
+            {"name": "Budget", "type": "Leaf"},
+            {"name": "Forecast", "type": "Leaf"}
+          ],
+          "edges": []
+        }
+      ]
+    },
+    {
+      "name": "Time_by_Month",
+      "type": "Regular",
+      "description": "Time dimension by month",
+      "format": "YYYY-MM",
+      "hierarchies": [
+        {
+          "name": "Time_by_Month",
+          "elements": [
+            {"name": "2024", "type": "Consolidated"},
+            {"name": "2024-01", "type": "Leaf"},
+            {"name": "2024-02", "type": "Leaf"},
+            {"name": "2024-03", "type": "Leaf"}
+          ],
+          "edges": [
+            {"parent": "2024", "child": "2024-01", "weight": 1},
+            {"parent": "2024", "child": "2024-02", "weight": 1},
+            {"parent": "2024", "child": "2024-03", "weight": 1}
+          ]
+        }
+      ]
+    }
+  ],
+
+  "cubes": [
+    {
+      "name": "CAPEX",
+      "description": "List of capital expenditures",
+      "specific_dimensions": [
+        {
+          "name": "Category_Capex",
+          "type": "Regular",
+          "description": "List of CAPEX categories",
+          "hierarchies": [
+            {
+              "name": "Category_Capex",
+              "elements": [
+                {"name": "Total_Category", "type": "Consolidated"},
+                {"name": "Hardware", "type": "Leaf"},
+                {"name": "Software", "type": "Leaf"},
+                {"name": "Infrastructure", "type": "Leaf"}
+              ],
+              "edges": [
+                {"parent": "Total_Category", "child": "Hardware", "weight": 1},
+                {"parent": "Total_Category", "child": "Software", "weight": 1},
+                {"parent": "Total_Category", "child": "Infrastructure", "weight": 1}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Item_Capex",
+          "type": "Regular",
+          "description": "List of CAPEX items",
+          "hierarchies": [
+            {
+              "name": "Item_Capex",
+              "elements": [
+                {"name": "Total_Items", "type": "Consolidated"},
+                {"name": "Server", "type": "Leaf"},
+                {"name": "Laptop", "type": "Leaf"}
+              ],
+              "edges": [
+                {"parent": "Total_Items", "child": "Server", "weight": 1},
+                {"parent": "Total_Items", "child": "Laptop", "weight": 1}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Capex_m",
+          "type": "Measures",
+          "description": "CAPEX measures",
+          "hierarchies": [
+            {
+              "name": "Capex_m",
+              "elements": [
+                {"name": "Amount", "type": "Numeric"},
+                {"name": "Accumulated_Depreciation", "type": "Numeric"},
+                {"name": "Net_Book_Value", "type": "Consolidated"}
+              ],
+              "edges": [
+                {
+                  "parent": "Net_Book_Value",
+                  "child": "Amount",
+                  "weight": 1
+                },
+                {
+                  "parent": "Net_Book_Value",
+                  "child": "Accumulated_Depreciation",
+                  "weight": -1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "shared_dimensions": ["Department", "Version", "Time_by_Month"],
+      "related_cubes": [
+        {"name": "CAPEX_prop", "relationship": "has properties"}
+      ]
+    },
+
+    {
+      "name": "CAPEX_prop",
+      "description": "List of properties of capital expenditures",
+      "specific_dimensions": [
+        {
+          "name": "Item_Capex",
+          "type": "Regular",
+          "description": "Shared with CAPEX cube",
+          "hierarchies": []
+        },
+        {
+          "name": "Capex_prop_m",
+          "type": "Measures",
+          "description": "CAPEX properties measures",
+          "hierarchies": [
+            {
+              "name": "Capex_prop_m",
+              "elements": [
+                {"name": "Year", "type": "String"},
+                {"name": "Total_Amount", "type": "Numeric"},
+                {
+                  "name": "Accumulated_Depreciation",
+                  "type": "Numeric",
+                  "source": {
+                    "cube": "CAPEX",
+                    "dimension": "Capex_m",
+                    "element": "Accumulated_Depreciation"
+                  }
+                },
+                {
+                  "name": "Purchase_Date",
+                  "type": "String",
+                  "references": "Time_by_Month"
+                },
+                {"name": "Net_Book_Value", "type": "Consolidated"}
+              ],
+              "edges": [
+                {
+                  "parent": "Net_Book_Value",
+                  "child": "Total_Amount",
+                  "weight": 1
+                },
+                {
+                  "parent": "Net_Book_Value",
+                  "child": "Accumulated_Depreciation",
+                  "weight": -1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "shared_dimensions": ["Version"]
+    },
+
+    {
+      "name": "Intangible_Assets",
+      "description": "List of intangible assets",
+      "specific_dimensions": [
+        {
+          "name": "Category_IA",
+          "type": "Regular",
+          "description": "List of IA categories",
+          "hierarchies": [
+            {
+              "name": "Category_IA",
+              "elements": [
+                {"name": "Total_Category", "type": "Consolidated"},
+                {"name": "Patents", "type": "Leaf"},
+                {"name": "Licenses", "type": "Leaf"}
+              ],
+              "edges": [
+                {"parent": "Total_Category", "child": "Patents", "weight": 1},
+                {"parent": "Total_Category", "child": "Licenses", "weight": 1}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Item_IA",
+          "type": "Regular",
+          "description": "List of IA items",
+          "hierarchies": [
+            {
+              "name": "Item_IA",
+              "elements": [
+                {"name": "Total_Items", "type": "Consolidated"},
+                {"name": "Patent_A", "type": "Leaf"},
+                {"name": "License_B", "type": "Leaf"}
+              ],
+              "edges": [
+                {"parent": "Total_Items", "child": "Patent_A", "weight": 1},
+                {"parent": "Total_Items", "child": "License_B", "weight": 1}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Intangible_Assets_m",
+          "type": "Measures",
+          "description": "Intangible Assets measures",
+          "hierarchies": [
+            {
+              "name": "Intangible_Assets_m",
+              "elements": [
+                {"name": "Amount", "type": "Numeric"},
+                {"name": "Accumulated_Amortization", "type": "Numeric"},
+                {"name": "Net_Book_Value", "type": "Consolidated"}
+              ],
+              "edges": [
+                {
+                  "parent": "Net_Book_Value",
+                  "child": "Amount",
+                  "weight": 1
+                },
+                {
+                  "parent": "Net_Book_Value",
+                  "child": "Accumulated_Amortization",
+                  "weight": -1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "shared_dimensions": ["Department", "Version", "Time_by_Month"],
+      "related_cubes": [
+        {"name": "IA_prop", "relationship": "has properties"}
+      ]
+    },
+
+    {
+      "name": "IA_prop",
+      "description": "List of properties of intangible assets",
+      "specific_dimensions": [
+        {
+          "name": "Item_IA",
+          "type": "Regular",
+          "description": "Shared with Intangible_Assets cube",
+          "hierarchies": []
+        },
+        {
+          "name": "IA_prop_m",
+          "type": "Measures",
+          "description": "IA properties measures",
+          "hierarchies": [
+            {
+              "name": "IA_prop_m",
+              "elements": [
+                {"name": "Year", "type": "String"},
+                {"name": "Total_Amount", "type": "Numeric"},
+                {
+                  "name": "Accumulated_Amortization",
+                  "type": "Numeric",
+                  "source": {
+                    "cube": "Intangible_Assets",
+                    "dimension": "Intangible_Assets_m",
+                    "element": "Accumulated_Amortization"
+                  }
+                },
+                {
+                  "name": "Purchase_Date",
+                  "type": "String",
+                  "references": "Time_by_Month"
+                },
+                {
+                  "name": "Final_Date",
+                  "type": "String",
+                  "references": "Time_by_Month"
+                },
+                {"name": "Net_Book_Value", "type": "Consolidated"}
+              ],
+              "edges": [
+                {
+                  "parent": "Net_Book_Value",
+                  "child": "Total_Amount",
+                  "weight": 1
+                },
+                {
+                  "parent": "Net_Book_Value",
+                  "child": "Accumulated_Amortization",
+                  "weight": -1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "shared_dimensions": ["Version"]
+    }
+  ]
+}
